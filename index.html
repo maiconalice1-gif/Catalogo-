@@ -10,14 +10,14 @@
 <meta property="og:site_name" content="M&amp;A Locação">
 <meta property="og:title" content="M&amp;A Locação · Catálogo digital">
 <meta property="og:description" content="Louças, réchauds e mobiliário para festas e eventos em Nova Iguaçu e Baixada Fluminense. Monte seu orçamento e envie pelo WhatsApp.">
-<meta property="og:url" content="https://malocacao.com/">
-<meta property="og:image" content="https://malocacao.com/og.jpg">
+<meta property="og:url" content="https://malocacao.com.br/">
+<meta property="og:image" content="https://malocacao.com.br/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Logo da M&amp;A Locação">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://malocacao.com/og.jpg">
-<link rel="canonical" href="https://malocacao.com/">
+<meta name="twitter:image" content="https://malocacao.com.br/og.jpg">
+<link rel="canonical" href="https://malocacao.com.br/">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
@@ -183,7 +183,21 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .acoes-mini{display:flex;flex-wrap:wrap;gap:8px}
 .aprovar{display:grid;gap:10px;border:1px solid var(--turq);border-radius:12px;padding:12px}
 .aprovar h4{margin:0;font-family:var(--display);font-weight:400;font-size:18px;color:var(--turq)}
+.recusa{display:grid;gap:10px;border:1px solid var(--coral);border-radius:12px;padding:12px}
+.recusa h4{margin:0;font-family:var(--display);font-weight:400;font-size:18px;color:var(--coral)}
+.recusa-ok{margin:0;color:#f3c3c8}
+.aprovar > .btn.perigo{justify-self:start}
 .ok-aprov{margin:0;color:var(--turq)}
+.cau-neg{display:grid;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px}
+.cau-lista{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.cau-linha{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--fg)}
+.cau-linha span{min-width:0}
+.cau-linha b{display:block;font-weight:600}
+.cau-linha small{display:block;color:var(--muted);font-size:13px}
+.cau-linha .num{flex:none;color:var(--gold-hi);font-weight:700}
+.cau-foto{background:var(--tile);border-radius:12px;overflow:hidden}
+.cau-foto img{display:block;width:100%;max-height:280px;object-fit:contain}
+.cau-neg input[type=file],#cau-foto{font-size:14px}
 .cep-info{color:var(--turq);font-size:12.5px;min-height:1em}
 .neg-wrap{border-top:1px solid var(--line);padding-top:12px}
 .neg-wrap > summary{cursor:pointer;font-weight:600;color:var(--gold-hi);padding:6px 0;list-style-position:inside}
@@ -243,14 +257,15 @@ label.f textarea{min-height:130px;resize:vertical;font-size:15px}
 document.documentElement.lang = "pt-BR";
 var DADOS = JSON.parse(document.getElementById("catalogo-dados").textContent);
 var CHAVE = "ma-orcamento";
-var estado = { cat: "tudo", busca: "", carrinho: {}, gestao: false, pendentes: 0, podeEditar: false, somenteLeitura: false, painel: null, evento: "", bairroSel: "", bairroOutro: "", neg: { fone: "", frete: "", desconto: "", obs: "" }, cli: { nome: "", fone: "", doc: "", cep: "", endereco: "", mesmo: true, cepEnt: "", entrega: "", terreo: "", andar: "" }, validar: false, fornecedores: [] };
-var userNs = null, PERMS = [["produtos", "Produtos e preços"], ["fretes", "Fretes"], ["negociar", "Negociar e enviar propostas"], ["aprovar", "Aprovar pedidos no sistema"], ["fornecedor", "Pedidos a fornecedores"]];
+var estado = { cat: "tudo", busca: "", carrinho: {}, gestao: false, pendentes: 0, podeEditar: false, somenteLeitura: false, painel: null, evento: "", bairroSel: "", bairroOutro: "", neg: { fone: "", frete: "", desconto: "", obs: "" }, cli: { nome: "", fone: "", doc: "", cep: "", endereco: "", mesmo: true, cepEnt: "", entrega: "", terreo: "", andar: "", obs: "" }, validar: false, fornecedores: [], caucoes: [] };
+var userNs = null, PERMS = [["produtos", "Produtos e preços"], ["fretes", "Fretes"], ["negociar", "Negociar e enviar propostas"], ["aprovar", "Aprovar pedidos no sistema"], ["fornecedor", "Pedidos a fornecedores"], ["caucoes", "Cauções de limpeza"]];
 estado.dono = false; estado.meuId = ""; estado.perms = null; estado.permMapa = {}; estado.cadastros = []; estado.nomes = {};
 function pode(k){ return estado.dono || !!(estado.perms && estado.perms[k]); }
 function algumaPerm(){ return estado.dono || PERMS.some(function(x){ return pode(x[0]); }); }
 var CH_PAG = "privado/pagamento", PAG_PADRAO = { tipo: "cnpj", chave: "", nome: "M&A LOCACAO", cidade: "NOVA IGUACU", link: "", obs: "" }, pagamento = JSON.parse(JSON.stringify(PAG_PADRAO));
 try { var pgs = JSON.parse(localStorage.getItem("ma-pagamento") || "null"); if (pgs && typeof pgs === "object") Object.keys(PAG_PADRAO).forEach(function(k){ if (typeof pgs[k] === "string") pagamento[k] = pgs[k]; }); } catch (e) {}
-var dbNs = null, CH_FORN = "privado/fornecedores", mcpNs = null, PROJETO = "rhzccrpyywyvhayvthfo", CH_APROV = "privado/aprovados", aprovados = {};
+var assetsNs = null, dbNs = null, CH_FORN = "privado/fornecedores", mcpNs = null, PROJETO = "", CH_APROV = "privado/aprovados", aprovados = {}, CH_RECUSA = "privado/recusados", recusados = {};
+try { var rcs = JSON.parse(localStorage.getItem("ma-recusados") || "{}"); if (rcs && typeof rcs === "object") recusados = rcs; } catch (e) {}
 try { var fl = JSON.parse(localStorage.getItem("ma-fornecedores") || "[]"); if (Array.isArray(fl)) estado.fornecedores = fl; } catch (e) {}
 if (!Array.isArray(DADOS.fretes)) DADOS.fretes = [];
 if (!Array.isArray(DADOS.naoAtendidos)) DADOS.naoAtendidos = [];
@@ -342,10 +357,13 @@ function textoOrcamento(){
   t += "Total estimado: " + brl.format(r.total) + (en.tipo === "bairro" || en.tipo === "retirada" ? "" : " + frete") + "\n";
   t += "Data do evento: " + (estado.evento ? estado.evento.split("-").reverse().join("/") : "") + "\n";
   t += dadosClienteTexto(en);
+  var obsCli = obsClienteTexto();
+  if (obsCli) t += "\nObservação do cliente: " + obsCli + "\n";
   if (pe.versao > 1) t += "\nMudanças: " + (mud.length ? mud.join("; ") : "nenhuma nos itens") + "\n";
   t += "\n(Enviado pelo catálogo digital)";
   return t;
 }
+function obsClienteTexto(){ return String(estado.cli.obs || "").replace(/\s+/g, " ").trim(); }
 function dadosClienteTexto(en){
   var c = estado.cli, t = "\nDados do cliente\n";
   t += "Nome: " + c.nome.trim() + "\n";
@@ -503,6 +521,7 @@ function clienteHtml(){
     if (!c.mesmo) h += '<label class="f full">Endereço de entrega<input id="c-ent" type="text" placeholder="Rua, número e complemento do local do evento" value="' + esc(c.entrega) + '">' + msgErro("entrega", e) + '</label>';
     h += '<div class="full terreo"><b>Entregamos somente no térreo.</b><span>A entrega e o recolhimento são feitos no nível da rua. Não subimos escadas nem usamos elevador.</span><label class="check"><input id="c-terreo" type="checkbox"' + (c.terreo === "sim" ? " checked" : "") + '> Estou ciente</label>' + msgErro("terreo", e) + '</div>';
   }
+  h += '<label class="f full">' + (adm ? "Observação do cliente" : "Observação (opcional)") + '<textarea id="c-obs" style="min-height:90px" maxlength="500" placeholder="Ex.: horário de entrega, ponto de referência ou alguma dúvida.">' + esc(c.obs || "") + '</textarea></label>';
   h += '</div>';
   if (!adm) h += '<p class="nota">Seus dados vão só na mensagem para a M&amp;A, para preparar o contrato e a entrega.</p>';
   return h + '</section>';
@@ -653,7 +672,7 @@ function totaisHtml(r){
   else linhaFrete = '<span>Frete</span><span>Escolha o bairro</span>';
   return '<div id="totais" class="totais"><div class="sub-linha"><span>Itens</span><span class="num">' + brl.format(r.itens) + '</span></div><div class="sub-linha">' + linhaFrete + '</div>' +
     '<div class="total"><span>Total estimado</span><b class="num">' + brl.format(r.total) + '</b></div>' +
-    '<p class="nota">Itens com preço por locação. ' + (en.tipo === "bairro" || en.tipo === "retirada" ? "" : "O frete entra quando você escolhe o bairro. ") + 'A M&amp;A confirma disponibilidade e valor final pelo WhatsApp.</p></div>';
+    '<p class="nota">Itens com preço por locação. ' + (en.tipo === "bairro" || en.tipo === "retirada" ? "" : "O frete entra quando você escolhe o bairro. ") + 'A M&amp;A confirma disponibilidade e valor final pelo WhatsApp. Alguns pedidos podem ter caução de limpeza, devolvida após a coleta. O valor vem na proposta.</p></div>';
 }
 function atualizarOrcamento(){
   var t = document.getElementById("totais"); if (t) t.outerHTML = totaisHtml(resumo());
@@ -746,6 +765,214 @@ function proposta(){
   var desc = parseBRL(n.desconto); if (!(desc > 0)) desc = 0;
   return { r: r, en: en, negFrete: negFrete, tabela: tabela, frete: frete, desconto: desc, total: Math.max(0, r.itens + frete - desc), aCombinar: negFrete == null && tabela == null };
 }
+/* Caução de limpeza: valor opcional por pedido, separado do controle de avarias do sistema. */
+function arred(v){ return Math.round(Number(v) * 100) / 100; }
+function errosCaucao(){
+  var n = estado.neg, e = [];
+  if (!n.cauAtiva) return e;
+  if (!(parseBRL(n.cauValor) > 0)) e.push("o valor da caução");
+  if (!itensCarrinho().some(function(x){ return !(n.cauFora && n.cauFora[x.it.id]); })) e.push("os utensílios cobertos pela caução");
+  return e;
+}
+function caucaoNeg(){
+  var n = estado.neg, valor = parseBRL(n.cauValor);
+  if (!n.cauAtiva || !(valor > 0)) return null;
+  var itens = itensCarrinho().filter(function(x){ return !(n.cauFora && n.cauFora[x.it.id]); }).map(function(x){ return x.q + "× " + x.it.nome; });
+  return itens.length ? { valor: arred(valor), itens: itens } : null;
+}
+function caucaoValor(){ var c = caucaoNeg(); return c ? c.valor : 0; }
+function caucaoTexto(){
+  var c = caucaoNeg(); if (!c) return "";
+  return "\nCaução de limpeza: " + brl.format(c.valor) + " (fora do total da locação)\nCobre: " + c.itens.join(", ") + "\nSe os utensílios voltarem limpos, devolvemos o valor integral. Se precisarem de limpeza, descontamos o valor usado e devolvemos o restante. Quebras e avarias são tratadas à parte.\n";
+}
+function caucaoNegHtml(){
+  var n = estado.neg;
+  var h = '<div class="cau-neg"><label class="check"><input id="n-cau-ativa" type="checkbox"' + (n.cauAtiva ? " checked" : "") + '> Cobrar caução de limpeza neste pedido</label>';
+  if (n.cauAtiva){
+    h += '<label class="f">Valor da caução (R$)<input id="n-cau-valor" type="text" inputmode="decimal" value="' + esc(n.cauValor || "") + '" placeholder="Ex.: 100,00"></label>';
+    h += '<fieldset class="opcoes"><legend>Utensílios cobertos</legend>';
+    itensCarrinho().forEach(function(x){
+      h += '<label class="check"><input type="checkbox" data-cau-item="' + esc(x.it.id) + '"' + (n.cauFora && n.cauFora[x.it.id] ? "" : " checked") + '> ' + esc(x.q + "× " + x.it.nome) + '</label>';
+    });
+    h += '</fieldset>';
+  }
+  return h + '</div>';
+}
+function caucaoPorId(id){ return estado.caucoes.filter(function(c){ return c.id === id; })[0] || null; }
+function idCaucao(v){ return String(v || "").trim().replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, ""); }
+function dataBR(ms){ var d = new Date(Number(ms) || 0); return Number(ms) ? String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear() : ""; }
+function registrarCaucao(num){
+  var cau = caucaoNeg(); if (!cau) return;
+  var n = estado.neg, id = idCaucao(n.codigo) || "pedido-" + num;
+  if (caucaoPorId(id)) return;
+  if (!dbNs){ aviso("Pedido aprovado, mas a caução não foi salva. Cadastre em Cauções de limpeza."); return; }
+  dbNs.doc("caucoes/" + id).set({ pedido: n.codigo || String(num), numero: String(num), cliente: estado.cli.nome.trim(), fone: estado.cli.fone, valor: cau.valor, itens: cau.itens.join(", "), status: "aberta", criadaEm: Date.now() }).catch(function(){
+    aviso("Pedido aprovado, mas a caução não foi salva. Cadastre em Cauções de limpeza.");
+  });
+}
+function caucoesFaixaHtml(){
+  var ab = estado.caucoes.filter(function(c){ return c.status !== "encerrada"; });
+  var total = ab.reduce(function(s, c){ return s + (Number(c.valor) || 0); }, 0);
+  return '<div class="gestao-faixa"><div><b>Cauções de limpeza</b><span>' + (ab.length ? ab.length + (ab.length === 1 ? " em aberto" : " em aberto") + " · " + brl.format(total) : "Nenhuma caução em aberto") + '</span></div><button type="button" class="btn ouro" data-a="cau-lista">Abrir cauções</button></div>';
+}
+function caucaoLinhaHtml(c){
+  var res = c.status === "encerrada" ? "Devolvido " + brl.format(Number(c.devolvido) || 0) : "Pedido " + (c.pedido || "");
+  return '<li><button type="button" class="cau-linha" data-a="cau-abrir" data-id="' + esc(c.id) + '"><span><b>' + esc(c.cliente || "Cliente") + '</b><small>' + esc(res) + '</small></span><span class="num">' + brl.format(Number(c.valor) || 0) + '</span></button></li>';
+}
+function caucoesHtml(){
+  var fechar = '<button type="button" class="fechar" data-a="fechar" aria-label="Fechar">' + ICON.x + '</button>';
+  var h = '<header><h3 id="painel-titulo">Cauções de limpeza</h3>' + fechar + '</header>';
+  h += '<p class="nota">Só de limpeza. Quebras e peças faltando continuam no controle de avarias do sistema.</p>';
+  if (!dbNs) return h + '<p class="erro-msg">As cauções não carregaram nesta tela. Abra a gestão no app do Claude com a sua conta.</p>';
+  var orden = function(a, b){ return (Number(b.criadaEm) || 0) - (Number(a.criadaEm) || 0); };
+  var ab = estado.caucoes.filter(function(c){ return c.status !== "encerrada"; }).sort(orden);
+  var fe = estado.caucoes.filter(function(c){ return c.status === "encerrada"; }).sort(orden);
+  h += '<button type="button" class="btn ouro" data-a="cau-nova" style="justify-self:start">Nova caução</button>';
+  h += '<h4 class="sub-titulo">Em aberto (' + ab.length + ')</h4>';
+  h += ab.length ? '<ul class="cau-lista">' + ab.map(caucaoLinhaHtml).join("") + '</ul>' : '<p class="nota">Nenhuma caução aguardando coleta.</p>';
+  if (fe.length) h += '<h4 class="sub-titulo">Encerradas (' + fe.length + ')</h4><ul class="cau-lista">' + fe.map(caucaoLinhaHtml).join("") + '</ul>';
+  return h;
+}
+function fotoCaucaoHtml(id){ return /^[0-9a-f]{32}$/.test(String(id || "")) ? '<div class="cau-foto"><img src="/_blob/' + id + '" alt="Foto dos utensílios na coleta"></div>' : ""; }
+function caucaoResumoHtml(p, c){
+  var usado = p.cond === "limpeza" ? parseBRL(p.usado) : 0, valido = usado >= 0 && usado <= Number(c.valor);
+  var h = '<div id="cau-resumo" class="totais"><div class="sub-linha"><span>Caução</span><span class="num">' + brl.format(Number(c.valor)) + '</span></div>';
+  if (p.cond === "limpeza") h += '<div class="sub-linha"><span>Limpeza</span><span class="num">' + (valido && usado ? "−" + brl.format(usado) : "A informar") + '</span></div>';
+  return h + '<div class="total"><span>Devolver ao cliente</span><b class="num">' + (p.cond && valido ? brl.format(arred(Number(c.valor) - (usado || 0))) : "A definir") + '</b></div></div>';
+}
+function avisoCaucaoTexto(c){
+  var primeiro = String(c.cliente || "").trim().split(/\s+/)[0] || "";
+  var t = "Olá" + (primeiro ? ", " + primeiro : "") + "! Registramos a coleta" + (c.pedido ? " do pedido " + c.pedido : "") + ".\n\n";
+  if (c.condicao === "limpos") t += "Os utensílios voltaram limpos. Devolução integral da caução: " + brl.format(Number(c.devolvido) || 0) + ".";
+  else t += "Os utensílios precisaram de limpeza.\nCaução: " + brl.format(Number(c.valor) || 0) + "\nLimpeza: " + brl.format(Number(c.usado) || 0) + "\nDevolução: " + brl.format(Number(c.devolvido) || 0) + ".";
+  return t + "\n\nQualquer dúvida, é só responder esta mensagem.";
+}
+function caucaoHtml(p){
+  var c = caucaoPorId(p.id), voltar = '<button type="button" class="btn" data-a="cau-lista" style="justify-self:start">Voltar às cauções</button>';
+  var h = '<header><h3 id="painel-titulo">' + esc(c ? c.cliente || "Caução" : "Caução") + '</h3><button type="button" class="fechar" data-a="fechar" aria-label="Fechar">' + ICON.x + '</button></header>';
+  if (!c) return h + '<p class="nota">Esta caução não existe mais.</p>' + voltar;
+  h += '<div class="totais">' + (c.pedido ? '<div class="sub-linha"><span>Pedido</span><span>' + esc(c.pedido) + '</span></div>' : "") + '<div class="sub-linha"><span>Caução</span><span class="num">' + brl.format(Number(c.valor) || 0) + '</span></div></div>';
+  h += '<p class="desc"><b>Cobre:</b> ' + esc(c.itens || "") + '</p>';
+  if (c.status === "encerrada"){
+    h += '<div class="totais"><div class="sub-linha"><span>Coleta em ' + esc(dataBR(c.coletaEm)) + '</span><span>' + (c.condicao === "limpos" ? "Voltaram limpos" : "Precisaram de limpeza") + '</span></div>';
+    if (c.condicao === "limpeza") h += '<div class="sub-linha"><span>Limpeza</span><span class="num">−' + brl.format(Number(c.usado) || 0) + '</span></div>';
+    h += '<div class="total"><span>Devolução registrada</span><b class="num">' + brl.format(Number(c.devolvido) || 0) + '</b></div></div>';
+    if (c.obs) h += '<p class="desc">' + esc(c.obs) + '</p>';
+    h += fotoCaucaoHtml(c.foto);
+    var f = foneWa(c.fone);
+    h += '<div class="acoes">' + (f ? '<a class="btn prim" href="https://wa.me/' + f + '?text=' + encodeURIComponent(avisoCaucaoTexto(c)) + '" target="_blank" rel="noopener">' + ICON.zap + ' Avisar o cliente</a>' : "") + '<button type="button" class="btn" data-a="cau-reabrir">Reabrir para corrigir</button></div>';
+    if (p.erro) h += '<p class="erro-msg">' + esc(p.erro) + '</p>';
+    return h + voltar;
+  }
+  h += '<div class="modo" role="radiogroup" aria-label="Como os utensílios voltaram"><button type="button" role="radio" aria-checked="' + (p.cond === "limpos") + '" data-a="cau-cond" data-id="limpos">Voltaram limpos</button><button type="button" role="radio" aria-checked="' + (p.cond === "limpeza") + '" data-a="cau-cond" data-id="limpeza">Precisam de limpeza</button></div>';
+  if (p.cond === "limpeza") h += '<label class="f">Valor usado na limpeza (R$)<input id="cau-usado" type="text" inputmode="decimal" value="' + esc(p.usado || "") + '" placeholder="Ex.: 30,00"></label>';
+  h += '<label class="f">Foto dos utensílios' + (p.cond === "limpeza" ? "" : " (opcional)") + '<input id="cau-foto" type="file" accept="image/*"' + (assetsNs ? "" : " disabled") + '></label>';
+  if (!assetsNs) h += '<p class="nota">A foto só pode ser enviada por quem tem permissão de edição, com a gestão aberta na sua conta.</p>';
+  if (p.enviandoFoto) h += '<p class="nota">Enviando foto…</p>';
+  h += fotoCaucaoHtml(p.foto);
+  h += '<label class="f">Observação' + (p.cond === "limpeza" ? "" : " (opcional)") + '<textarea id="cau-obs" style="min-height:80px" maxlength="500" placeholder="Ex.: pratos com resto de comida.">' + esc(p.obs || "") + '</textarea></label>';
+  h += caucaoResumoHtml(p, c);
+  if (p.erro) h += '<p class="erro-msg" role="alert">' + esc(p.erro) + '</p>';
+  h += '<div class="acoes"><button type="button" class="btn ouro" data-a="cau-registrar"' + (p.salvando || p.enviandoFoto ? " disabled" : "") + '>' + (p.salvando ? "Registrando…" : "Registrar coleta e devolução") + '</button></div>';
+  h += '<p class="nota">Quebras e peças faltando continuam no controle de avarias do sistema.</p>';
+  if (p.confirmarExcluir) h += '<div class="confirma"><span>Excluir esta caução?</span><div class="acoes"><button type="button" class="btn perigo" data-a="cau-excluir-sim">Sim, excluir</button><button type="button" class="btn" data-a="cau-excluir-nao">Manter</button></div></div>';
+  else h += '<button type="button" class="btn perigo" data-a="cau-excluir" style="justify-self:start">Excluir caução</button>';
+  return h + voltar;
+}
+function caucaoNovaHtml(p){
+  var d = p.d;
+  var h = '<header><h3 id="painel-titulo">Nova caução</h3><button type="button" class="fechar" data-a="fechar" aria-label="Fechar">' + ICON.x + '</button></header>';
+  h += '<p class="nota">Use para pedidos feitos fora do catálogo.</p><div class="campos">';
+  h += '<label class="f full">Nome do cliente<input id="cn-cliente" type="text" value="' + esc(d.cliente) + '"></label>';
+  h += '<label class="f">WhatsApp<input id="cn-fone" type="tel" inputmode="tel" placeholder="(21) 99999-9999" value="' + esc(d.fone) + '"></label>';
+  h += '<label class="f">Pedido<input id="cn-pedido" type="text" placeholder="Ex.: MA-4W4E9" value="' + esc(d.pedido) + '"></label>';
+  h += '<label class="f">Valor da caução (R$)<input id="cn-valor" type="text" inputmode="decimal" placeholder="Ex.: 100,00" value="' + esc(d.valor) + '"></label>';
+  h += '<label class="f full">Utensílios cobertos<textarea id="cn-itens" style="min-height:80px" placeholder="Ex.: 50 pratos e 50 talheres">' + esc(d.itens) + '</textarea></label></div>';
+  if (p.erro) h += '<p class="erro-msg" role="alert">' + esc(p.erro) + '</p>';
+  return h + '<div class="acoes"><button type="button" class="btn ouro" data-a="cau-criar"' + (p.salvando ? " disabled" : "") + '>Salvar caução</button><button type="button" class="btn" data-a="cau-lista">Cancelar</button></div>';
+}
+function criarCaucao(){
+  var p = estado.painel, d = p.d, e = [], v = parseBRL(d.valor);
+  if (!d.cliente.trim()) e.push("o nome do cliente");
+  if (!(v > 0)) e.push("o valor da caução");
+  if (!d.itens.trim()) e.push("os utensílios cobertos");
+  if (e.length){ p.erro = "Falta: " + e.join(", ") + "."; return render(); }
+  var id = idCaucao(d.pedido) || "manual-" + Date.now();
+  if (caucaoPorId(id)){ p.erro = "Já existe uma caução para esse pedido."; return render(); }
+  if (!dbNs){ p.erro = "As cauções não carregaram nesta tela."; return render(); }
+  p.salvando = true; p.erro = ""; render();
+  var novo = { pedido: d.pedido.trim(), numero: "", cliente: d.cliente.trim(), fone: d.fone.trim(), valor: arred(v), itens: d.itens.trim(), status: "aberta", criadaEm: Date.now() };
+  dbNs.doc("caucoes/" + id).set(novo).then(function(){
+    if (!caucaoPorId(id)){ novo.id = id; estado.caucoes.push(novo); }
+    abrir({ tipo: "caucoes" }); aviso("Caução salva");
+  }, function(){ p.salvando = false; p.erro = "Não foi possível salvar agora. Tente de novo em instantes."; render(); });
+}
+function errosColeta(p, c){
+  var e = [];
+  if (!p.cond) e.push("como os utensílios voltaram");
+  if (p.cond === "limpeza"){
+    var u = parseBRL(p.usado);
+    if (!(u > 0)) e.push("o valor usado na limpeza");
+    else if (u > Number(c.valor)) e.push("um valor de limpeza até " + brl.format(Number(c.valor)));
+    if (!p.foto) e.push("a foto");
+    if (!String(p.obs || "").trim()) e.push("a observação");
+  }
+  return e;
+}
+function semId(c){ var d = {}; Object.keys(c).forEach(function(k){ if (k !== "id") d[k] = c[k]; }); return d; }
+function trocarCaucao(id, doc){
+  doc.id = id; estado.caucoes = estado.caucoes.filter(function(c){ return c.id !== id; }).concat([doc]);
+}
+function registrarColeta(){
+  var p = estado.painel, c = caucaoPorId(p.id); if (!c || !dbNs) return;
+  var e = errosColeta(p, c);
+  if (e.length){ p.erro = "Para registrar, falta: " + e.join(", ") + "."; return render(); }
+  var usado = p.cond === "limpeza" ? arred(parseBRL(p.usado)) : 0, d = semId(c);
+  d.status = "encerrada"; d.condicao = p.cond; d.usado = usado; d.devolvido = arred(Number(c.valor) - usado);
+  d.obs = String(p.obs || "").trim(); d.foto = p.foto || ""; d.coletaEm = Date.now();
+  p.salvando = true; p.erro = ""; render();
+  dbNs.doc("caucoes/" + p.id).set(d).then(function(){
+    trocarCaucao(p.id, d); p.salvando = false; render(); aviso("Devolução registrada");
+  }, function(){ p.salvando = false; p.erro = "Não foi possível salvar agora. Tente de novo em instantes."; render(); });
+}
+function reabrirCaucao(){
+  var p = estado.painel, c = caucaoPorId(p.id); if (!c || !dbNs) return;
+  var d = semId(c); ["condicao", "usado", "devolvido", "obs", "foto", "coletaEm"].forEach(function(k){ delete d[k]; });
+  d.status = "aberta";
+  dbNs.doc("caucoes/" + p.id).set(d).then(function(){
+    p.cond = c.condicao || ""; p.usado = c.usado ? String(c.usado).replace(".", ",") : ""; p.obs = c.obs || ""; p.foto = c.foto || ""; p.erro = "";
+    trocarCaucao(p.id, d); render();
+  }, function(){ p.erro = "Não foi possível reabrir agora. Tente de novo em instantes."; render(); });
+}
+function excluirCaucao(){
+  var p = estado.painel, id = p.id; if (!dbNs) return;
+  dbNs.doc("caucoes/" + id).delete().then(function(){
+    estado.caucoes = estado.caucoes.filter(function(c){ return c.id !== id; });
+    abrir({ tipo: "caucoes" }); aviso("Caução excluída");
+  }, function(){ p.erro = "Não foi possível excluir agora. Tente de novo em instantes."; p.confirmarExcluir = false; render(); });
+}
+function fotoParaBlob(file){
+  return new Promise(function(ok, falha){
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){
+      var max = 1280, s = Math.min(1, max / Math.max(img.width, img.height));
+      var c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(function(b){ if (b) ok(b); else falha(); }, "image/jpeg", 0.82);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); falha(); };
+    img.src = url;
+  });
+}
+function enviarFotoCaucao(file){
+  var p = estado.painel; if (!file) return;
+  if (!assetsNs){ p.erro = "A foto não pode ser enviada nesta tela."; return render(); }
+  p.enviandoFoto = true; p.erro = ""; render();
+  fotoParaBlob(file).then(function(b){ return assetsNs.upload(b, { type: "image/jpeg" }); }).then(function(r){
+    p.foto = r.id; p.enviandoFoto = false; render();
+  }, function(){ p.enviandoFoto = false; p.erro = "Não foi possível enviar a foto. Tente outra imagem."; render(); });
+}
 function textoProposta(){
   var pr = proposta(), r = pr.r, en = pr.en, n = estado.neg, local = en.tipo === "bairro" ? " (" + en.nome + ")" : en.tipo === "outro" || en.tipo === "fora" ? " (" + en.nome + ")" : "";
   var primeiro = estado.cli.nome.trim().split(/\s+/)[0] || "";
@@ -758,6 +985,7 @@ function textoProposta(){
   else t += "Frete" + local + ": a combinar\n";
   if (pr.desconto) t += "Desconto: −" + brl.format(pr.desconto) + "\n";
   t += "Total: " + brl.format(pr.total) + (pr.aCombinar ? " + frete" : "") + "\n";
+  if (caucaoValor()) t += caucaoTexto() + "\n";
   if (estado.evento) t += "Data do evento: " + estado.evento.split("-").reverse().join("/") + "\n";
   if (n.obs.trim()) t += "\n" + n.obs.trim() + "\n";
   t += "\nPara confirmar, é só responder esta mensagem.";
@@ -774,7 +1002,7 @@ function errosProposta(){
   if (String(estado.neg.frete || "").trim() && !(parseBRL(estado.neg.frete) >= 0)) e.push("um valor de frete válido");
   if (String(estado.neg.desconto || "").trim() && !(parseBRL(estado.neg.desconto) >= 0)) e.push("um valor de desconto válido");
   if (pr.desconto > pr.r.itens + pr.frete) e.push("um desconto menor que o total");
-  return e;
+  return e.concat(errosCaucao());
 }
 function foneWa(v){ var d = soDigitos(v); if (d.length === 10 || d.length === 11) d = "55" + d; return (d.length === 12 || d.length === 13) && d.indexOf("55") === 0 ? d : ""; }
 function guardarFornecedores(){
@@ -853,13 +1081,15 @@ function sqlAprovar(){
   var obs = [(estado.neg.codigo ? "Pedido " + estado.neg.codigo + " do catálogo digital" : "Pedido do catálogo digital") + ", aprovado pelo administrador."];
   if (en.tipo !== "retirada") obs.push("Entrega somente no térreo (cliente ciente).");
   if (estado.neg.obs.trim()) obs.push(estado.neg.obs.trim());
+  var cauSql = caucaoNeg(); if (cauSql) obs.push("Caução de limpeza: " + brl.format(cauSql.valor) + ", cobre " + cauSql.itens.join(", ") + ".");
+  if (obsClienteTexto()) obs.push("Observação do cliente: " + obsClienteTexto());
   var fim = estado.neg.devolucao || estado.evento;
   return "with v(codigo, nome, preco, qtd) as (values " + vals + "), " +
     "cli as (insert into clientes (nome, telefone, cpf_cnpj, endereco) values (" + sq(c.nome.trim()) + "," + sq(fone) + "," + sq(soDigitos(c.doc).length ? fmtDoc(c.doc) : "") + "," + sq(c.endereco.trim() + (soDigitos(c.cep).length === 8 ? ", CEP " + fmtCep(c.cep) : "")) + ") " +
       "on conflict (telefone) do update set nome = excluded.nome, cpf_cnpj = coalesce(excluded.cpf_cnpj, clientes.cpf_cnpj), endereco = coalesce(excluded.endereco, clientes.endereco) returning id), " +
     "it as (insert into itens (codigo, nome, preco) select codigo, nome, preco::numeric from v on conflict (codigo) do update set nome = excluded.nome, preco = excluded.preco returning id, codigo), " +
-    "ped as (insert into pedidos (cliente_id, status, data_inicio, data_fim, tipo_saida, endereco, valor_itens, valor_frete, desconto, origem, observacoes) select cli.id, 'reservado', " +
-      sq(estado.evento) + "::date, " + sq(fim) + "::date, " + (en.tipo === "retirada" ? "'retirada'" : "'entrega'") + ", " + sq(enderecoEntregaTexto()) + ", " + sn(pr.r.itens) + ", " + sn(pr.frete) + ", " + sn(pr.desconto) + ", 'catalogo', " + sq(obs.join(" ")) + " from cli returning id, numero), " +
+    "ped as (insert into pedidos (cliente_id, status, data_inicio, data_fim, tipo_saida, endereco, valor_itens, valor_frete, desconto, valor_caucao, origem, observacoes) select cli.id, 'reservado', " +
+      sq(estado.evento) + "::date, " + sq(fim) + "::date, " + (en.tipo === "retirada" ? "'retirada'" : "'entrega'") + ", " + sq(enderecoEntregaTexto()) + ", " + sn(pr.r.itens) + ", " + sn(pr.frete) + ", " + sn(pr.desconto) + ", " + sn(caucaoValor()) + ", 'catalogo', " + sq(obs.join(" ")) + " from cli returning id, numero), " +
     "pi as (insert into pedido_itens (pedido_id, item_id, quantidade, preco_unit, periodos) select ped.id, it.id, v.qtd, v.preco::numeric, 1 from ped, v join it on it.codigo = v.codigo returning 1) " +
     "select (select numero from ped) as numero, (select count(*) from pi) as itens;";
 }
@@ -904,15 +1134,16 @@ function pixCopiaCola(valor, txid){
 }
 function pagamentoPronto(){ return !!pixChave(pagamento) || linkValido(pagamento.link); }
 function valorCobrar(){
-  var tot = proposta().total, v = parseBRL(estado.neg.cobrar);
+  var tot = proposta().total + caucaoValor(), v = parseBRL(estado.neg.cobrar);
   return v > 0 && v <= tot ? v : tot;
 }
 function linkDoPedido(){ var l = estado.neg.link != null ? estado.neg.link : pagamento.link; return linkValido(l) ? String(l).trim() : ""; }
 function textoPagamento(){
-  var tot = proposta().total, v = valorCobrar(), k = pixChave(pagamento), l = linkDoPedido();
+  var tot = proposta().total + caucaoValor(), v = valorCobrar(), k = pixChave(pagamento), l = linkDoPedido();
   if (!k && !l) return "";
   var t = "\n*PAGAMENTO*\n";
   t += v < tot ? "Valor para pagar agora: " + brl.format(v) + " (de " + brl.format(tot) + ")\n" : "Valor: " + brl.format(v) + "\n";
+  if (caucaoValor()) t += "O total inclui a caução de limpeza de " + brl.format(caucaoValor()) + ".\n";
   if (k){
     var nomeTipo = (TIPOS_PIX.filter(function(x){ return x[0] === pagamento.tipo; })[0] || ["", "chave"])[1];
     t += "\n*Pix*\nChave (" + nomeTipo + "): " + pixChaveTexto(pagamento) + "\nFavorecido: " + (pagamento.nome.trim() || DADOS.empresa.nome) + "\n";
@@ -956,7 +1187,7 @@ function salvarPagamento(){
   }, function(){ p.salvando = false; p.erro = "Não foi possível salvar agora. Tente de novo."; render(); });
 }
 function pagamentoAprovarHtml(){
-  var n = estado.neg, tot = proposta().total;
+  var n = estado.neg, tot = proposta().total + caucaoValor();
   if (!pagamentoPronto()) return '<p class="nota">Cadastre a chave Pix e o link de pagamento em Administrador → <b>Pagamento</b> para irem junto na confirmação.</p>';
   var h = '<div class="campos"><label class="f">Cobrar agora (R$)<input id="n-cobrar" type="text" inputmode="decimal" value="' + esc(n.cobrar || "") + '" placeholder="Total: ' + brl.format(tot).replace(/ /g, " ") + '"></label>';
   h += '<label class="f">Link de pagamento deste pedido<input id="n-link" type="url" inputmode="url" value="' + esc(n.link != null ? n.link : pagamento.link) + '" placeholder="https://…"></label></div>';
@@ -974,7 +1205,8 @@ function textoAprovacao(){
   if (en.tipo === "retirada" && pr.negFrete == null) t += "Retirada no galpão (sem frete)\n";
   else t += "Frete" + (en.tipo === "bairro" || en.tipo === "outro" ? " (" + en.nome + ")" : "") + ": " + (pr.frete ? brl.format(pr.frete) : "grátis") + "\n";
   if (pr.desconto) t += "Desconto: −" + brl.format(pr.desconto) + "\n";
-  t += "Total: " + brl.format(pr.total) + "\n\n";
+  t += "Total: " + brl.format(pr.total) + "\n";
+  t += caucaoTexto() + "\n";
   t += "Data do evento: " + dt(estado.evento) + "\n";
   var dev = n.devolucao || estado.evento; if (dev) t += "Devolução: " + dt(dev) + "\n";
   if (en.tipo === "retirada") t += "Retirada e devolução no galpão: " + (e.endereco || "") + (e.horario ? " (" + e.horario + ")" : "") + "\n";
@@ -985,8 +1217,60 @@ function textoAprovacao(){
   return t;
 }
 function linkAprovacao(){ return "https://wa.me/" + foneWa(estado.cli.fone) + "?text=" + encodeURIComponent(textoAprovacao()); }
+function textoRecusa(){
+  var c = estado.cli, n = estado.neg, e = DADOS.empresa;
+  var primeiro = c.nome.trim().split(/\s+/)[0] || "";
+  var dt = estado.evento ? estado.evento.split("-").reverse().join("/") : "";
+  var t = "*PEDIDO NÃO APROVADO*\n" + (n.codigo ? "Pedido " + n.codigo + " · " : "") + e.nome + "\n\n";
+  t += "Olá" + (primeiro ? ", " + primeiro : "") + "! Agradecemos muito o seu interesse.\n\n";
+  t += "Infelizmente não vamos conseguir atender o seu pedido" + (dt ? " para o dia " + dt : "") + " desta vez.\n\n";
+  t += "Se quiser, podemos ver outra data ou outros itens. É só responder esta mensagem.\n\n";
+  t += e.nome;
+  return t;
+}
+function linkRecusa(){ return "https://wa.me/" + foneWa(estado.cli.fone) + "?text=" + encodeURIComponent(textoRecusa()); }
+function guardarRecusados(){
+  try { localStorage.setItem("ma-recusados", JSON.stringify(recusados)); } catch (e) {}
+  if (dbNs) dbNs.doc(CH_RECUSA).set({ mapa: recusados }).catch(function(){});
+}
+function recusarPedido(){
+  var n = estado.neg, quando = Date.now();
+  n.recusado = { em: quando }; n.confirmarRecusa = false;
+  if (n.codigo){ recusados[n.codigo] = { em: quando, nome: estado.cli.nome.trim() }; guardarRecusados(); }
+  render(); aviso("Pedido marcado como não aprovado");
+}
+function desfazerRecusa(){
+  var n = estado.neg; n.recusado = null;
+  if (n.codigo && recusados[n.codigo]){ delete recusados[n.codigo]; guardarRecusados(); }
+  render(); aviso("Recusa desfeita");
+}
+function recusaHtml(){
+  var n = estado.neg, cod = n.codigo, r = n.recusado || (cod && recusados[cod]);
+  var temFone = !!foneWa(estado.cli.fone);
+  if (r){
+    var d = new Date(r.em || Date.now()), quando = String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+    var h = '<section class="recusa"><h4>Pedido não aprovado</h4>';
+    h += '<p class="recusa-ok">Marcado como <b>não aprovado</b> em ' + quando + (cod ? ' · ' + esc(cod) : '') + '. Ele não foi enviado para o sistema.</p>';
+    h += '<div class="acoes">';
+    if (temFone) h += '<a id="recusa-reenviar" class="btn" href="' + esc(linkRecusa()) + '" target="_blank" rel="noopener">' + ICON.zap + ' Reenviar aviso ao cliente</a>';
+    h += '<button type="button" class="btn" data-a="recusar-desfazer">Desfazer e voltar a negociar</button></div>';
+    return h + '</section>';
+  }
+  if (n.confirmarRecusa){
+    var h2 = '<div class="confirma"><span>Não aprovar o pedido' + (cod ? " " + esc(cod) : "") + ' de ' + esc(estado.cli.nome.trim() || "cliente") + '?</span>';
+    if (temFone){
+      h2 += '<div class="acoes"><a id="recusar-enviar" class="btn perigo" href="' + esc(linkRecusa()) + '" target="_blank" rel="noopener">' + ICON.zap + ' Sim, não aprovar e avisar o cliente</a><button type="button" class="btn" data-a="recusar-voltar">Voltar</button></div>';
+      h2 += '<p class="nota">O WhatsApp do cliente abre com uma mensagem educada pronta para enviar. Nada vai para o sistema.</p>';
+    } else {
+      h2 += '<p class="erro-msg">Falta o WhatsApp do cliente para enviar o aviso.</p><div class="acoes"><button type="button" class="btn perigo" data-a="recusar-sem-aviso">Marcar como não aprovado sem avisar</button><button type="button" class="btn" data-a="recusar-voltar">Voltar</button></div>';
+    }
+    return h2 + '</div>';
+  }
+  return '<button type="button" class="btn perigo" data-a="recusar">Não aprovar este pedido</button>';
+}
 function aprovarHtml(){
   var n = estado.neg, cod = n.codigo, ja = n.aprovado || (cod && aprovados[cod]);
+  if (!ja && (n.recusado || (cod && recusados[cod]))) return recusaHtml();
   var h = '<section class="aprovar"><h4>Aprovar pedido</h4>';
   if (ja){
     var num = n.aprovado ? n.aprovado.numero : aprovados[cod].numero;
@@ -999,11 +1283,12 @@ function aprovarHtml(){
   h += '<div class="campos"><label class="f">Devolução<input id="n-devol" type="date" value="' + esc(n.devolucao || estado.evento || "") + '"></label></div>';
   h += pagamentoAprovarHtml();
   if (n.confirmarAprov){
-    h += '<div class="confirma"><span>Aprovar o pedido' + (cod ? " " + esc(cod) : "") + ' de ' + esc(estado.cli.nome.trim() || "cliente") + ' no total de ' + brl.format(proposta().total) + ' e gravar no sistema?</span><div class="acoes"><a id="aprovar-enviar" class="btn ouro" href="' + esc(linkAprovacao()) + '" target="_blank" rel="noopener">' + ICON.zap + ' ' + (n.gravando ? "Gravando…" : "Sim, aprovar e avisar o cliente") + '</a><button type="button" class="btn" data-a="aprovar-nao">Voltar</button></div><p class="nota">O pedido vai para o sistema e o WhatsApp do cliente abre com a confirmação pronta para enviar.</p></div>';
+    h += '<div class="confirma"><span>Aprovar o pedido' + (cod ? " " + esc(cod) : "") + ' de ' + esc(estado.cli.nome.trim() || "cliente") + ' no total de ' + brl.format(proposta().total) + (caucaoValor() ? ', mais caução de ' + brl.format(caucaoValor()) : '') + ' e gravar no sistema?</span><div class="acoes"><a id="aprovar-enviar" class="btn ouro" href="' + esc(linkAprovacao()) + '" target="_blank" rel="noopener">' + ICON.zap + ' ' + (n.gravando ? "Gravando…" : "Sim, aprovar e avisar o cliente") + '</a><button type="button" class="btn" data-a="aprovar-nao">Voltar</button></div><p class="nota">O pedido vai para o sistema e o WhatsApp do cliente abre com a confirmação pronta para enviar.</p></div>';
   } else if (n.clienteAvisado && n.erroAprov){
     h += '<button type="button" class="btn ouro" data-a="aprovar-sim"' + (n.gravando ? " disabled" : "") + '>' + (n.gravando ? "Gravando…" : "Gravar no sistema de novo") + '</button>';
-  } else h += '<button type="button" class="btn ouro" data-a="aprovar">Aprovar pedido e enviar ao sistema</button>';
+  } else if (!n.confirmarRecusa) h += '<button type="button" class="btn ouro" data-a="aprovar">Aprovar pedido e enviar ao sistema</button>';
   if (n.erroAprov) h += '<p class="erro-msg">' + esc(n.erroAprov) + '</p>';
+  if (!n.confirmarAprov && !n.clienteAvisado) h += recusaHtml();
   return h + '</section>';
 }
 function aprovarPedido(){
@@ -1015,6 +1300,7 @@ function aprovarPedido(){
     n.gravando = false; n.confirmarAprov = false;
     if (!num){ n.erroAprov = "O sistema respondeu, mas não confirmou o número do pedido. Confira no sistema antes de aprovar de novo."; return render(); }
     n.aprovado = { numero: num };
+    registrarCaucao(num);
     if (n.codigo){ aprovados[n.codigo] = { numero: num, em: Date.now() }; if (dbNs) dbNs.doc(CH_APROV).set({ mapa: aprovados }).catch(function(){}); }
     render(); aviso("Pedido aprovado · nº " + num + " no sistema");
   }, function(err){
@@ -1147,6 +1433,7 @@ function gestaoFaixas(){
     '<div class="gestao-faixa"><div><b>Fotos do sistema</b><span>Traz as fotos dos produtos salvas no sistema, em alta definição, e troca as do catálogo.</span></div><button type="button" class="btn ouro" data-a="trazer-fotos">Trazer fotos</button></div>';
   if (pode("fretes")) h += '<div class="gestao-faixa"><div><b>Frete por bairro</b><span>' + (DADOS.fretes.length ? DADOS.fretes.length + (DADOS.fretes.length === 1 ? " bairro" : " bairros") + " em " + cidadesDe(DADOS.fretes).length + (cidadesDe(DADOS.fretes).length === 1 ? " cidade" : " cidades") : "Nenhum bairro cadastrado") + '</span></div><button type="button" class="btn ouro" data-a="fretes">Editar fretes</button></div>';
   if (pode("negociar")) h += '<div class="gestao-faixa"><div><b>Negociar com cliente</b><span>Cole o pedido que o cliente mandou no WhatsApp, ajuste frete e desconto e devolva a proposta.</span></div><button type="button" class="btn ouro" data-a="importar">Negociar pedido</button></div>';
+  if (pode("caucoes")) h += caucoesFaixaHtml();
   if (pode("fornecedor")) h += '<div class="gestao-faixa"><div><b>Pedido ao fornecedor</b><span>Monte o pedido com os itens do orçamento e envie pelo WhatsApp do fornecedor.</span></div><button type="button" class="btn ouro" data-a="fornecedor">Pedir ao fornecedor</button></div>';
   if (pode("produtos")) h += '<p class="nota" style="margin-top:10px">Para mudar preço ou foto, toque em Editar no item. Para incluir um produto, use “Novo item” no fim de cada categoria. Depois toque em Publicar.</p>';
   return h;
@@ -1188,7 +1475,7 @@ function resumoPropostaHtml(){
   var pr = proposta();
   return '<div id="proposta-total" class="totais"><div class="sub-linha"><span>Frete na proposta</span><span class="num">' + (pr.aCombinar ? "A combinar" : pr.frete ? brl.format(pr.frete) : "Grátis") + (pr.negFrete != null && pr.tabela != null && pr.negFrete !== pr.tabela ? ' <s class="riscado">' + brl.format(pr.tabela) + '</s>' : "") + '</span></div>' +
     (pr.desconto ? '<div class="sub-linha"><span>Desconto</span><span class="num">−' + brl.format(pr.desconto) + '</span></div>' : "") +
-    '<div class="total"><span>Total da proposta</span><b class="num">' + brl.format(pr.total) + (pr.aCombinar ? " + frete" : "") + '</b></div></div>';
+    '<div class="total"><span>Total da proposta</span><b class="num">' + brl.format(pr.total) + (pr.aCombinar ? " + frete" : "") + '</b></div>' + (caucaoValor() ? '<div class="sub-linha"><span>Caução de limpeza, à parte</span><span class="num">' + brl.format(caucaoValor()) + '</span></div>' : "") + '</div>';
 }
 function negociacaoHtml(r){
   var n = estado.neg, pr = proposta();
@@ -1198,6 +1485,7 @@ function negociacaoHtml(r){
   h += '<label class="f">Desconto (R$)<input id="n-desc" type="text" inputmode="decimal" value="' + esc(n.desconto) + '" placeholder="0,00"></label>';
   h += '<label class="f full">Observação para o cliente<textarea id="n-obs" style="min-height:70px" placeholder="Ex.: Entrega até as 10h e recolhimento no dia seguinte.">' + esc(n.obs) + '</textarea></label></div>';
   h += '<div class="rapido"><span class="nota">Frete rápido:</span><button type="button" class="btn" data-a="neg-frete" data-n="0">Grátis</button><button type="button" class="btn" data-a="neg-frete" data-n="-5">−R$ 5</button><button type="button" class="btn" data-a="neg-frete" data-n="-10">−R$ 10</button><button type="button" class="btn" data-a="neg-frete" data-n="tabela">Tabela</button></div>';
+  h += caucaoNegHtml();
   h += resumoPropostaHtml();
   h += '<div class="acoes"><a id="enviar-proposta" class="btn prim" href="' + esc(linkProposta()) + '" target="_blank" rel="noopener">' + ICON.zap + ' Enviar proposta ao cliente</a><button type="button" class="btn" data-a="copiar-proposta">Copiar proposta</button></div>';
   h += '<p class="erro-msg" id="erros-proposta" hidden></p>';
@@ -1214,9 +1502,10 @@ function atualizarProposta(){
 function importarPedido(){
   var p = estado.painel, txt = (document.getElementById("f-pedido") || {}).value || "";
   p.texto = txt;
-  var novo = {}, ok = 0, falhas = [], sel = "", outro = "", evento = "", codigo = "", cli = { nome: "", fone: "", doc: "", cep: "", endereco: "", mesmo: true, cepEnt: "", entrega: "", terreo: "", andar: "" };
+  var novo = {}, ok = 0, falhas = [], sel = "", outro = "", evento = "", codigo = "", cli = { nome: "", fone: "", doc: "", cep: "", endereco: "", mesmo: true, cepEnt: "", entrega: "", terreo: "", andar: "", obs: "" };
   txt.split(/\n/).forEach(function(l){
     var m, linha = l.trim();
+    if ((m = linha.match(/^Observação do cliente:\s*(.*)$/))){ cli.obs = m[1]; return; }
     if ((m = linha.match(/^[•\-*]?\s*(\d+)\s*[×x]\s*(.+?)\s+[—–-]\s+(?:R\$|preço sob consulta)/))){
       var cod = (m[2].match(/\[([A-Z0-9-]+)\]\s*$/) || [])[1], nome = norm(m[2].replace(/\s*\[[A-Z0-9-]+\]\s*$/, ""));
       var it = (cod && item(cod)) || DADOS.itens.filter(function(x){ return norm(x.nome) === nome; })[0];
@@ -1287,6 +1576,12 @@ function painelHtml(){
       if (estado.podeEditar && pode("negociar")) h += '<details class="neg-wrap" id="neg-wrap"' + (estado.negAberta ? " open" : "") + '><summary>Negociar e enviar proposta ao cliente <span>administrador</span></summary>' + negociacaoHtml(r) + '</details>';
       h += '<button type="button" class="btn perigo" data-a="limpar" style="justify-self:start">Esvaziar orçamento</button>';
     }
+  } else if (p.tipo === "caucoes"){
+    h += caucoesHtml();
+  } else if (p.tipo === "caucao"){
+    h += caucaoHtml(p);
+  } else if (p.tipo === "caucao-nova"){
+    h += caucaoNovaHtml(p);
   } else if (p.tipo === "pagamento"){
     h += pagamentoHtml(p);
   } else if (p.tipo === "fotos"){
@@ -1437,6 +1732,13 @@ function publicar(){
 app.addEventListener("click", function(ev){
   var reenv = ev.target.closest("#reenviar-cliente");
   if (reenv){ reenv.href = linkAprovacao(); return; }
+  var rcv = ev.target.closest("#recusar-enviar");
+  if (rcv){
+    if (!pode("aprovar")){ ev.preventDefault(); aviso("Você não tem permissão para isso. Fale com o dono do catálogo."); return; }
+    rcv.href = linkRecusa(); setTimeout(recusarPedido, 300); return;
+  }
+  var rcr = ev.target.closest("#recusa-reenviar");
+  if (rcr){ rcr.href = linkRecusa(); return; }
   var apv = ev.target.closest("#aprovar-enviar");
   if (apv){
     if (estado.neg.gravando){ ev.preventDefault(); return; }
@@ -1488,8 +1790,9 @@ app.addEventListener("click", function(ev){
   }
   var el = ev.target.closest("[data-a]"); if (!el) return;
   var a = el.getAttribute("data-a"), id = el.getAttribute("data-id");
-  var exige = { "trazer-fotos": "produtos", sincronizar: "produtos", editar: "produtos", novo: "produtos", fretes: "fretes", importar: "negociar", fornecedor: "fornecedor", aprovar: "aprovar", "aprovar-sim": "aprovar" }[a];
+  var exige = { "trazer-fotos": "produtos", sincronizar: "produtos", editar: "produtos", novo: "produtos", fretes: "fretes", importar: "negociar", fornecedor: "fornecedor", aprovar: "aprovar", "aprovar-sim": "aprovar", recusar: "aprovar", "recusar-sem-aviso": "aprovar", "recusar-desfazer": "aprovar" }[a];
   if (exige && !pode(exige)){ aviso("Você não tem permissão para isso. Fale com o dono do catálogo."); return; }
+  if (/^cau-/.test(a) && !pode("caucoes")){ aviso("Você não tem permissão para isso. Fale com o dono do catálogo."); return; }
   if (a === "fechar-fundo"){ if (ev.target === el) fechar(); return; }
   if (el.tagName === "A") return;
   switch (a){
@@ -1521,6 +1824,16 @@ app.addEventListener("click", function(ev){
       var pm2 = estado.painel.mapa[id] = estado.painel.mapa[id] || {};
       PERMS.forEach(function(x){ pm2[x[0]] = a === "perm-tudo"; }); render(); break;
     case "perm-salvar": if (estado.dono) salvarPermissoes(); break;
+    case "cau-lista": abrir({ tipo: "caucoes" }); break;
+    case "cau-abrir": abrir({ tipo: "caucao", id: id, cond: "", usado: "", obs: "", foto: "", erro: "" }); break;
+    case "cau-cond": estado.painel.cond = id; estado.painel.erro = ""; render(); break;
+    case "cau-registrar": registrarColeta(); break;
+    case "cau-reabrir": reabrirCaucao(); break;
+    case "cau-excluir": estado.painel.confirmarExcluir = true; render(); break;
+    case "cau-excluir-nao": estado.painel.confirmarExcluir = false; render(); break;
+    case "cau-excluir-sim": excluirCaucao(); break;
+    case "cau-nova": abrir({ tipo: "caucao-nova", d: { cliente: "", fone: "", pedido: "", valor: "", itens: "" }, erro: "" }); break;
+    case "cau-criar": criarCaucao(); break;
     case "pagamento": if (estado.dono) abrir({ tipo: "pagamento", rascunho: JSON.parse(JSON.stringify(pagamento)) }); break;
     case "pg-salvar": if (estado.dono) salvarPagamento(); break;
     case "aprovar":
@@ -1529,6 +1842,10 @@ app.addEventListener("click", function(ev){
       estado.neg.erroAprov = ""; estado.neg.confirmarAprov = true; render(); break;
     case "aprovar-nao": estado.neg.confirmarAprov = false; render(); break;
     case "aprovar-sim": if (!estado.neg.gravando) aprovarPedido(); break;
+    case "recusar": estado.neg.confirmarAprov = false; estado.neg.confirmarRecusa = true; render(); break;
+    case "recusar-voltar": estado.neg.confirmarRecusa = false; render(); break;
+    case "recusar-sem-aviso": recusarPedido(); break;
+    case "recusar-desfazer": desfazerRecusa(); break;
     case "fornecedor": estado.gestao = false; abrirFornecedor(); break;
     case "copiar-fornecedor": copiar(textoFornecedor(estado.painel), "Pedido copiado. Cole na conversa do fornecedor."); break;
     case "fo-remover":
@@ -1589,14 +1906,19 @@ app.addEventListener("input", function(ev){
     salvarCliente(); atualizarErros(); var zc = document.getElementById("enviar-zap"); if (zc) zc.href = zap(textoOrcamento());
     if (d8.length === 8) buscarCep(d8, alvoCep);
   }
-  var campoCli = { "c-nome": "nome", "c-fone": "fone", "c-doc": "doc", "c-end": "endereco", "c-ent": "entrega", "c-andar": "andar" }[t.id];
+  var campoCli = { "c-nome": "nome", "c-fone": "fone", "c-doc": "doc", "c-end": "endereco", "c-ent": "entrega", "c-andar": "andar", "c-obs": "obs" }[t.id];
   if (campoCli){ estado.cli[campoCli] = t.value; salvarCliente(); atualizarErros(); var zz = document.getElementById("enviar-zap"); if (zz) zz.href = zap(textoOrcamento()); atualizarProposta(); }
   if (t.id === "evento") atualizarErros();
   if (t.id === "n-devol") estado.neg.devolucao = t.value;
   if (t.id === "n-cobrar") estado.neg.cobrar = t.value;
   if (t.id === "n-link") estado.neg.link = t.value;
   if (/^pg-/.test(t.id) && estado.painel && estado.painel.tipo === "pagamento"){ lerPagamento(); if (t.id === "pg-tipo") render(); }
-  var campoNeg = { "n-frete": "frete", "n-desc": "desconto", "n-obs": "obs" }[t.id];
+  if (estado.painel && estado.painel.tipo === "caucao"){
+    if (t.id === "cau-obs") estado.painel.obs = t.value;
+    if (t.id === "cau-usado"){ estado.painel.usado = t.value; var cr = document.getElementById("cau-resumo"), ca = caucaoPorId(estado.painel.id); if (cr && ca) cr.outerHTML = caucaoResumoHtml(estado.painel, ca); }
+  }
+  if (estado.painel && estado.painel.tipo === "caucao-nova" && /^cn-/.test(t.id)) estado.painel.d[t.id.slice(3)] = t.value;
+  var campoNeg = { "n-frete": "frete", "n-desc": "desconto", "n-obs": "obs", "n-cau-valor": "cauValor" }[t.id];
   if (campoNeg){ estado.neg[campoNeg] = t.value; atualizarProposta(); }
 });
 app.addEventListener("change", function(ev){
@@ -1608,6 +1930,9 @@ app.addEventListener("change", function(ev){
     return;
   }
   if (t.id === "f-cat"){ lerRascunho(); render(); }
+  if (t.id === "n-cau-ativa"){ estado.neg.cauAtiva = t.checked; render(); return; }
+  if (t.hasAttribute && t.hasAttribute("data-cau-item")){ var nf = estado.neg; nf.cauFora = nf.cauFora || {}; nf.cauFora[t.getAttribute("data-cau-item")] = !t.checked; atualizarProposta(); return; }
+  if (t.id === "cau-foto"){ enviarFotoCaucao(t.files && t.files[0]); return; }
   if (estado.painel && estado.painel.tipo === "fornecedor"){
     var pf3 = estado.painel;
     if (t.id === "fo-sel"){ pf3.sel = t.value; render(); return; }
@@ -1638,51 +1963,6 @@ app.addEventListener("focusin", function(ev){ if (ev.target.classList && ev.targ
 if (estado.cliSalvo){ Object.keys(estado.cli).forEach(function(k){ if (estado.cliSalvo[k] != null) estado.cli[k] = estado.cliSalvo[k]; }); }
 render();
 
-if (window.claude && typeof window.claude.use === "function"){
-  Promise.all([window.claude.use("artifact"), window.claude.use("user")]).then(function(r){
-    artifactNs = r[0];
-    var u = r[1];
-    if (artifactNs && u){
-      Promise.all([u.canEdit ? u.canEdit() : false, u.isOwner ? u.isOwner() : false]).then(function(v){
-        if (!(v[0] || v[1])) return;
-        userNs = u; estado.dono = !!v[1]; estado.podeEditar = true; render();
-        window.claude.use("mcp").then(function(m){ mcpNs = m; }, function(){});
-        window.claude.use("db").then(function(db){
-          if (!db){ if (!estado.dono){ estado.perms = {}; render(); } return; }
-          dbNs = db;
-          Promise.resolve(u.id ? u.id() : "").then(function(meu){
-            estado.meuId = meu || "";
-            db.doc("permissoes/geral").onSnapshot(function(snap){
-              var d = snap && snap.data ? snap.data() : null;
-              estado.permMapa = d && d.mapa ? d.mapa : {};
-              if (!estado.dono) estado.perms = estado.permMapa[estado.meuId] || {};
-              render();
-            }, function(){ if (!estado.dono){ estado.perms = {}; render(); } });
-            if (estado.dono){
-              db.collection("cadastro").onSnapshot(function(q){
-                estado.cadastros = (q && q.docs ? q.docs : []).map(function(d){ var x = d.data() || {}; return { id: d.id, visto: x.visto || 0 }; });
-                carregarNomes(); if (estado.gestao) render();
-              }, function(){});
-            } else if (estado.meuId){
-              db.doc("cadastro/" + estado.meuId).set({ visto: Date.now() }).catch(function(){});
-            }
-          }, function(){});
-          db.doc(CH_PAG).onSnapshot(function(snap){
-            var d = snap && snap.data ? snap.data() : null;
-            if (d && typeof d === "object"){ Object.keys(PAG_PADRAO).forEach(function(k){ pagamento[k] = typeof d[k] === "string" ? d[k] : PAG_PADRAO[k]; }); try { localStorage.setItem("ma-pagamento", JSON.stringify(pagamento)); } catch (e) {} if (estado.gestao || estado.painel) render(); }
-          }, function(){});
-          db.doc(CH_APROV).onSnapshot(function(snap){ var d = snap && snap.data ? snap.data() : null; if (d && d.mapa) aprovados = d.mapa; }, function(){});
-          db.doc(CH_FORN).onSnapshot(function(snap){
-            var d = snap && snap.data ? snap.data() : null;
-            if (d && Array.isArray(d.lista)){ estado.fornecedores = d.lista.slice(); try { localStorage.setItem("ma-fornecedores", JSON.stringify(estado.fornecedores)); } catch (e) {} }
-            else if (estado.fornecedores.length) db.doc(CH_FORN).set({ lista: estado.fornecedores }).catch(function(){});
-            if (estado.painel && estado.painel.tipo === "fornecedor") render();
-          }, function(){ dbNs = null; });
-        }, function(){});
-      }, function(){});
-    }
-  }, function(){});
-}
 })();
 </script>
 
